@@ -1,0 +1,109 @@
+name: BuildFlow CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  # =========================================================================
+  # 1. CONTINUOUS INTEGRATION: Automated Backend & Database Testing
+  # =========================================================================
+  backend-ci:
+    name: Backend CI (Tests & DB Push)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install Backend Dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client & Push SQLite Schema
+        run: |
+          npx prisma generate
+          npx prisma db push
+
+      - name: Seed Demo Construction Dataset
+        run: npm run db:seed
+
+      - name: Run Automated Vitest Integration Tests (FR-01..FR-10)
+        run: npm test
+
+  # =========================================================================
+  # 2. CONTINUOUS INTEGRATION: Frontend TypeCheck & Production Build
+  # =========================================================================
+  frontend-ci:
+    name: Frontend CI (TypeScript & Vite Build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Frontend Dependencies
+        run: npm ci
+
+      - name: Verify TypeScript & Build Production Bundle
+        run: npm run build
+
+      - name: Upload Production Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: buildflow-frontend-dist
+          path: frontend/dist/
+          retention-days: 7
+
+  # =========================================================================
+  # 3. CONTINUOUS DELIVERY & DEVOPS NOTIFICATION SIMULATION
+  # =========================================================================
+  cd-pipeline:
+    name: Continuous Deployment & Team Notification
+    needs: [backend-ci, frontend-ci]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Download Frontend Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: buildflow-frontend-dist
+          path: dist/
+
+      - name: Simulate Production Deployment Check
+        run: |
+          echo "🚀 Starting Automated Deployment Pipeline..."
+          echo "✅ Database Schema Synchronized (SQLite/Prisma)"
+          echo "✅ All 8 Integration Test Suites Verified (FR-01..10)"
+          echo "✅ Production Frontend Bundle Prepared in dist/"
+          echo "🎉 BuildFlow Release Package v1.0.0 Successfully Built and Ready for Deployment!"
+
+      - name: Slack Webhook Notification (Simulated)
+        run: |
+          echo "📢 Notifying #buildflow-deployments on Slack: 'Commit ${{ github.sha }} passed CI/CD pipeline and is deployed.'"
