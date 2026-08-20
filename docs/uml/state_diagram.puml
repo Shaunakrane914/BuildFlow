@@ -5,30 +5,24 @@ skinparam state {
   ArrowColor Black
 }
 
-[*] --> BACKLOG : Work package drafted
-
-state "Task Lifecycle" as TaskState {
-  BACKLOG --> TODO : Scheduled in Sprint / Milestone
-  TODO --> IN_PROGRESS : Contractor commences work
-  IN_PROGRESS --> IN_REVIEW : Completed by crew, awaiting inspection
+state "Task Lifecycle" as TaskLifecycle {
+  [*] --> BACKLOG : Work package drafted
+  BACKLOG --> TODO : Scheduled in Milestone
+  TODO --> IN_PROGRESS : Contractor begins work
+  IN_PROGRESS --> IN_REVIEW : Crew finishes, awaiting audit
   IN_REVIEW --> DONE : Verified & passed QA
-  IN_REVIEW --> IN_PROGRESS : Rework required
+  IN_REVIEW --> IN_PROGRESS : Non-conformance rework
+  DONE --> [*]
 }
 
-DONE --> [*]
-
---
-
-[*] --> REQUESTED : Material batch requested
-
-state "Material Supply Chain Lifecycle" as MaterialState {
+state "Material Supply Chain Lifecycle" as MaterialLifecycle {
+  [*] --> REQUESTED : Batch order submitted
   REQUESTED --> ORDERED : Purchase order approved
-  ORDERED --> IN_TRANSIT : Dispatched from supplier warehouse
-  IN_TRANSIT --> DELIVERED : Offloaded at construction site
-  IN_TRANSIT --> DELAYED : Customs hold / Port disruption
+  ORDERED --> IN_TRANSIT : Dispatched from warehouse
+  IN_TRANSIT --> DELIVERED : Offloaded at site
+  IN_TRANSIT --> DELAYED : Customs / Port hold
   DELAYED --> IN_TRANSIT : Cleared & resumed transit
+  DELIVERED --> [*]
 }
-
-DELIVERED --> [*]
 
 @enduml

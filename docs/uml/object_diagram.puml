@@ -1,0 +1,95 @@
+@startuml BuildFlow_Object_Diagram
+skinparam objectAttributeIconSize 0
+skinparam monochrome false
+skinparam shadowing false
+
+object "alex_pm : User" as Alex {
+  id = "u-pm"
+  name = "Alex Vance"
+  role = "PROJECT_MANAGER"
+  email = "alex.pm@buildflow.dev"
+}
+
+object "marcus_eng : User" as Marcus {
+  id = "u-eng"
+  name = "Marcus Brody"
+  role = "ENGINEER"
+  email = "marcus.eng@buildflow.dev"
+}
+
+object "sophia_arch : User" as Sophia {
+  id = "u-arch"
+  name = "Sophia Chen"
+  role = "ARCHITECT"
+  email = "sophia.arch@buildflow.dev"
+}
+
+object "david_cont : User" as David {
+  id = "u-contractor"
+  name = "David Miller"
+  role = "CONTRACTOR"
+  email = "david.contractor@buildflow.dev"
+}
+
+object "skyline_tower : Project" as Prj1 {
+  id = "prj-101"
+  code = "PRJ-101"
+  name = "Skyline Pinnacle Tower"
+  budget = $14,500,000
+  progress = 68%
+  status = "IN_PROGRESS"
+}
+
+object "tsk_104 : Task" as Tsk1 {
+  id = "tsk-104"
+  code = "TSK-104"
+  title = "MEP Riser & HVAC Ducting Integration"
+  priority = "HIGH"
+  status = "IN_PROGRESS"
+  progress = 40%
+}
+
+object "dsg_102 : DesignDocument" as Dsg1 {
+  id = "dsg-102"
+  code = "DSG-102"
+  title = "Level 12-24 HVAC & MEP Layouts"
+  category = "MEP"
+  version = "v2.1"
+  status = "APPROVED"
+}
+
+object "rev_102 : DesignReview" as Rev1 {
+  id = "rev-102"
+  status = "APPROVED"
+  calculationRemarks = "Duct clearances certified per NFPA-90A"
+  approvedAt = "2026-08-20 14:30"
+}
+
+object "req_101 : MaterialRequest" as Req1 {
+  id = "req-101"
+  code = "REQ-101"
+  quantity = 120 Tons
+  status = "DELAYED"
+  notes = "Customs hold at East Harbor Terminal"
+}
+
+object "ins_002 : Inspection" as Ins1 {
+  id = "ins-002"
+  code = "INS-002"
+  area = "Level 8 Fire Barriers"
+  checkCategory = "Safety"
+  result = "FAILED"
+  notes = "Missing firestop sealant on pipe penetrations"
+}
+
+Alex -- Prj1 : manages
+Prj1 *-- Tsk1
+Prj1 *-- Dsg1
+Prj1 *-- Req1
+Prj1 *-- Ins1
+
+Tsk1 -- David : assignedTo
+Dsg1 -- Sophia : uploadedBy
+Dsg1 *-- Rev1
+Rev1 -- Marcus : reviewedBy
+@enduml

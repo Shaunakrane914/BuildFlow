@@ -1,0 +1,24 @@
+@startuml BuildFlow_Collaboration_Diagram
+skinparam monochrome false
+skinparam shadowing false
+
+rectangle "Architect (Sophia)" as Arch
+rectangle "Frontend App (React)" as UI
+rectangle "Backend Controller" as Backend
+rectangle "Database (Prisma/SQLite)" as DB
+rectangle "Engineer (Marcus PE)" as Eng
+rectangle "Contractor (David)" as Cont
+
+Arch -right-> UI : 1: uploadDesign(CAD_v2.1)
+UI -right-> Backend : 2: POST /api/designs
+Backend -down-> DB : 3: insertDesignRecord()
+Backend -down-> DB : 4: createNotification()
+
+Eng -left-> UI : 5: openReviewModal()
+UI -down-> Backend : 6: POST /api/designs/:id/review
+Backend -down-> DB : 7: updateStatus('APPROVED')
+Backend -down-> DB : 8: logActivityAudit()
+
+Backend -right-> UI : 9: notifyApproval()
+UI -right-> Cont : 10: startTaskExecution()
+@enduml

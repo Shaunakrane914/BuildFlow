@@ -1,0 +1,48 @@
+@startuml BuildFlow_Deployment_Diagram
+skinparam node {
+  BackgroundColor White
+  BorderColor DarkSlateGray
+}
+skinparam artifact {
+  BackgroundColor LightYellow
+}
+
+node "Client Workstation / Mobile Device" as ClientNode {
+  node "Modern Web Browser (Chrome/Firefox/Edge)" {
+    artifact "React 18 SPA (HTML/JS/CSS Bundle)" as SPA
+  }
+}
+
+node "Cloud / On-Premise Application Host" as AppServer {
+  node "Node.js Runtime Environment (v20+)" {
+    artifact "Express REST API Server" as APIApp
+    artifact "Prisma ORM Client Engine" as PrismaEngine
+  }
+  
+  node "File System Storage" {
+    database "SQLite Database (dev.db)" as SQLiteDB
+    folder "/uploads (CAD Blueprints & PDFs)" as Uploads
+  }
+}
+
+node "DevOps & Collaboration Cloud" as CloudServices {
+  node "GitHub Cloud" {
+    artifact "Source Code Repository (main branch)" as GitRepo
+    artifact "GitHub Actions CI/CD Runners" as Runners
+  }
+  
+  node "Slack Workspace" {
+    artifact "Webhook Notification Bot" as SlackBot
+  }
+}
+
+SPA -- APIApp : HTTPS / REST JSON (Port 5000 / 443)
+APIApp -- PrismaEngine : Internal Function Calls
+PrismaEngine -- SQLiteDB : File I/O Lock-Free Relational Reads/Writes
+APIApp -- Uploads : File System Streams
+
+GitRepo -- Runners : Trigger on Push / Pull Request
+Runners -- APIApp : Automated Test & Build Verification
+APIApp -- SlackBot : Webhook JSON Alerts
+
+@enduml

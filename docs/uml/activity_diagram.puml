@@ -1,0 +1,47 @@
+@startuml BuildFlow_Activity_Diagram
+start
+
+:Project Owner initiates Project Scope & Budget;
+:Project Manager creates Milestone Tasks in Backlog;
+
+fork
+  :Architect uploads BIM/CAD Blueprints (v1.0);
+  :Structural Engineer performs Load Calculations;
+  if (Calculation Check) then (Passed)
+    :Engineer approves Drawing & Certifies;
+  else (Failed)
+    :Engineer Rejects with Revision Orders;
+    :Architect uploads revised Drawing (v2.1);
+    :Engineer approves Drawing;
+  endif
+fork again
+  :Contractor requests Material Batch (Steel/Concrete);
+  :Supplier ships Material Order;
+  if (Logistics Transit) then (On Time)
+    :Delivered to Construction Site;
+  else (Delayed)
+    :Flag DELAYED Status & Log Site Issue;
+    :Project Manager reschedules Crane/Pour Timeline;
+    :Customs Cleared & Delivered;
+  endif
+end fork
+
+:General Contractor commences Onsite Work Package;
+:Contractor moves Task to IN_PROGRESS on Kanban;
+:Municipal Inspector conducts Onsite Safety Audit;
+
+if (Inspection Verdict) then (PASSED)
+  :Task transitioned to DONE;
+  :System updates Project Progress %;
+else (FAILED)
+  :Log Non-Compliance Violation;
+  :Remediate Defect;
+  :Re-inspect & Pass;
+  :Task transitioned to DONE;
+endif
+
+:Executive Reports & KPIs updated;
+:Immutable Audit Log generated;
+
+stop
+@enduml

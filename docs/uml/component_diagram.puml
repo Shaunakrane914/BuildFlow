@@ -1,0 +1,68 @@
+@startuml BuildFlow_Component_Diagram
+skinparam componentStyle uml2
+skinparam shadowing false
+
+package "Frontend Client Application (SPA)" {
+  [React UI Layer] as UI
+  [Auth & Role Context] as Auth
+  [Project & KPI Context] as ProjCtx
+  [Kanban Task Component] as Kanban
+  [Design Review Modal] as DesignUI
+  [Material Supply Grid] as MatUI
+  [Axios REST Client] as Axios
+}
+
+package "Backend REST API Server" {
+  [Express Router /api] as Router
+  [AuthController] as AuthCtrl
+  [ProjectController] as ProjCtrl
+  [TaskController] as TaskCtrl
+  [DesignController] as DesignCtrl
+  [MaterialController] as MatCtrl
+  [InspectionController] as InspCtrl
+  [DashboardController] as DashCtrl
+  [ActivityAuditService] as AuditSvc
+  [Prisma ORM Client] as Prisma
+}
+
+database "Data Storage" {
+  [SQLite Relational DB (dev.db)] as DB
+}
+
+package "External DevOps / Integrations" {
+  [Slack Webhook Service] as Slack
+  [GitHub Actions CI/CD] as CI
+}
+
+UI ..> Axios
+Kanban ..> Axios
+DesignUI ..> Axios
+MatUI ..> Axios
+
+Axios --> Router : HTTP REST / JSON (x-user-id)
+Router --> AuthCtrl
+Router --> ProjCtrl
+Router --> TaskCtrl
+Router --> DesignCtrl
+Router --> MatCtrl
+Router --> InspCtrl
+Router --> DashCtrl
+
+TaskCtrl ..> AuditSvc
+DesignCtrl ..> AuditSvc
+MatCtrl ..> AuditSvc
+
+AuthCtrl --> Prisma
+ProjCtrl --> Prisma
+TaskCtrl --> Prisma
+DesignCtrl --> Prisma
+MatCtrl --> Prisma
+InspCtrl --> Prisma
+DashCtrl --> Prisma
+
+Prisma --> DB : SQL Engine Queries
+
+AuditSvc ..> Slack : Event Webhook Alerts
+CI ..> Prisma : Automated DB Migrations & Vitest Tests
+
+@enduml
