@@ -1,0 +1,39 @@
+@startuml BuildFlow_Sequence_Diagram
+autonumber
+actor "Architect\n(Sophia)" as Arch
+boundary "Frontend UI\n(React)" as UI
+control "Backend API\n(Express)" as API
+database "Relational DB\n(SQLite/Prisma)" as DB
+actor "Structural Engineer\n(Marcus PE)" as Eng
+actor "General Contractor\n(David)" as Cont
+
+== 1. Blueprint Upload & Submission ==
+Arch -> UI: Uploads CAD drawing revision (v2.1 MEP)
+UI -> API: POST /api/designs (code, version, uploaderId)
+API -> DB: INSERT INTO DesignDocument (status: UNDER_REVIEW)
+API -> DB: INSERT INTO Notification (to: Marcus Brody)
+API -> DB: INSERT INTO ActivityLog (action: UPLOADED_DESIGN)
+API --> UI: 201 Created (Drawing record)
+UI --> Arch: Display "Under Review" status badge
+
+== 2. Engineering Calculation Review & Certification ==
+Eng -> UI: Opens "Design Documents" & selects Drawing
+UI -> API: GET /api/designs (filters by project)
+API --> UI: Return Design details with version history
+Eng -> UI: Clicks "Conduct Review", enters PE calculation remarks & clicks "Approve"
+UI -> API: POST /api/designs/:id/review (decision: APPROVED, remarks)
+API -> DB: UPDATE DesignDocument SET status = 'APPROVED'
+API -> DB: INSERT INTO DesignReview (reviewerId, status, remarks)
+API -> DB: INSERT INTO Notification (to: Sophia & David)
+API -> DB: INSERT INTO ActivityLog (action: APPROVED_DESIGN)
+API --> UI: 200 OK (Updated status: APPROVED)
+UI --> Eng: Display Green Certified Badge
+
+== 3. Contractor Notification & Execution ==
+API -> UI: Dispatches Realtime / Polled Notification
+UI --> Cont: "Drawing approved - Proceed with L14-16 rough-in"
+Cont -> UI: Moves Task TSK-104 from TODO to IN_PROGRESS
+UI -> API: PATCH /api/tasks/TSK-104 (status: IN_PROGRESS)
+API -> DB: UPDATE Task & recalculate Project Progress %
+API --> UI: 200 OK (Project progress updated)
+@enduml

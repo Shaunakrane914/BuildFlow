@@ -1,0 +1,34 @@
+@startuml BuildFlow_State_Diagram
+skinparam state {
+  BackgroundColor White
+  BorderColor DarkSlateGray
+  ArrowColor Black
+}
+
+[*] --> BACKLOG : Work package drafted
+
+state "Task Lifecycle" as TaskState {
+  BACKLOG --> TODO : Scheduled in Sprint / Milestone
+  TODO --> IN_PROGRESS : Contractor commences work
+  IN_PROGRESS --> IN_REVIEW : Completed by crew, awaiting inspection
+  IN_REVIEW --> DONE : Verified & passed QA
+  IN_REVIEW --> IN_PROGRESS : Rework required
+}
+
+DONE --> [*]
+
+--
+
+[*] --> REQUESTED : Material batch requested
+
+state "Material Supply Chain Lifecycle" as MaterialState {
+  REQUESTED --> ORDERED : Purchase order approved
+  ORDERED --> IN_TRANSIT : Dispatched from supplier warehouse
+  IN_TRANSIT --> DELIVERED : Offloaded at construction site
+  IN_TRANSIT --> DELAYED : Customs hold / Port disruption
+  DELAYED --> IN_TRANSIT : Cleared & resumed transit
+}
+
+DELIVERED --> [*]
+
+@enduml

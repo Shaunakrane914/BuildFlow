@@ -1,0 +1,195 @@
+@startuml BuildFlow_Class_Diagram
+skinparam classAttributeIconSize 0
+skinparam monochrome false
+skinparam shadowing false
+skinparam defaultFontName Arial
+
+enum UserRole {
+  PROJECT_OWNER
+  PROJECT_MANAGER
+  ARCHITECT
+  ENGINEER
+  CONTRACTOR
+  SITE_SUPERVISOR
+  SUPPLIER
+  INSPECTOR
+}
+
+enum TaskStatus {
+  BACKLOG
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum DesignStatus {
+  DRAFT
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum MaterialStatus {
+  REQUESTED
+  ORDERED
+  IN_TRANSIT
+  DELIVERED
+  DELAYED
+}
+
+enum InspectionResult {
+  PASSED
+  FAILED
+  PENDING
+}
+
+enum IssueSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+class User {
+  +String id
+  +String name
+  +String email
+  +UserRole role
+  +String title
+  +String department
+  +login()
+  +switchRole()
+}
+
+class Project {
+  +String id
+  +String code
+  +String name
+  +String location
+  +Float budget
+  +DateTime startDate
+  +DateTime endDate
+  +Int progress
+  +createProject()
+  +calculateProgress()
+}
+
+class Task {
+  +String id
+  +String code
+  +String title
+  +String description
+  +Priority priority
+  +TaskStatus status
+  +DateTime dueDate
+  +updateStatus()
+  +assignTo()
+}
+
+class TaskDependency {
+  +String id
+  +String taskId
+  +String prerequisiteTaskId
+}
+
+class DesignDocument {
+  +String id
+  +String code
+  +String title
+  +String category
+  +String version
+  +DesignStatus status
+  +uploadBlueprint()
+  +submitForReview()
+}
+
+class DesignReview {
+  +String id
+  +String designId
+  +String reviewerId
+  +String status
+  +String calculationRemarks
+  +certifyApproval()
+}
+
+class Material {
+  +String id
+  +String code
+  +String name
+  +String category
+  +String unit
+  +Float unitCost
+}
+
+class MaterialRequest {
+  +String id
+  +String code
+  +Float quantity
+  +MaterialStatus status
+  +DateTime expectedDelivery
+  +String notes
+  +updateDeliveryStatus()
+}
+
+class Inspection {
+  +String id
+  +String code
+  +String area
+  +String checkCategory
+  +InspectionResult result
+  +String notes
+  +DateTime inspectionDate
+  +recordAudit()
+}
+
+class Issue {
+  +String id
+  +String code
+  +String title
+  +IssueSeverity severity
+  +String status
+  +String resolutionNotes
+  +logIssue()
+  +resolveIssue()
+}
+
+class ActivityLog {
+  +String id
+  +String userId
+  +String action
+  +String entityType
+  +String details
+  +DateTime createdAt
+}
+
+' Relationships
+User "1" <-- "0..*" Project : managedBy / ownedBy
+Project "1" *-- "0..*" Task : contains
+Project "1" *-- "0..*" DesignDocument : contains
+Project "1" *-- "0..*" Material : specifies
+Project "1" *-- "0..*" Inspection : audits
+Project "1" *-- "0..*" Issue : tracks
+
+Task "1" o-- "0..*" TaskDependency : prerequisite
+User "1" <-- "0..*" Task : assignedTo
+
+DesignDocument "1" *-- "0..*" DesignReview : reviews
+User "1" <-- "0..*" DesignReview : reviewedBy
+User "1" <-- "0..*" DesignDocument : uploadedBy
+
+Material "1" *-- "0..*" MaterialRequest : orderedVia
+User "1" <-- "0..*" MaterialRequest : suppliedBy
+
+User "1" <-- "0..*" Inspection : inspectedBy
+User "1" <-- "0..*" Issue : reportedBy / assignedTo
+User "1" <-- "0..*" ActivityLog : performedBy
+
+@enduml
