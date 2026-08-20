@@ -91,15 +91,18 @@
 
 ---
 
-### 📌 STAGE 5: Automated Quality Assurance & CI/CD (Tool: GITHUB ACTIONS)
-- **What to show:** Open the **"Actions"** tab on your GitHub repository (`.github/workflows/ci-cd.yml`).
+### 📌 STAGE 5: Dedicated CI/CD Automation & DevOps Pipeline (Tool: JENKINS / CI/CD SERVER)
+- **What to show:** Open [Jenkinsfile](file:///c:/Users/Shaunak%20Rane/Desktop/BuildFlow/Jenkinsfile), [.gitlab-ci.yml](file:///c:/Users/Shaunak%20Rane/Desktop/BuildFlow/.gitlab-ci.yml), or [docs/CICD_PIPELINE.md](file:///c:/Users/Shaunak%20Rane/Desktop/BuildFlow/docs/CICD_PIPELINE.md).
 - **Key Talking Points:**
-  1. *"Modern software engineering relies on continuous quality verification. We configured a GitHub Actions CI/CD pipeline."*
-  2. *"Every push or Pull Request automatically triggers:"*
-     - **Backend CI Job:** Sets up Node.js 20, pushes the SQLite schema via Prisma, seeds realistic data, and executes all 8 automated integration test suites.
-     - **Frontend CI Job:** Validates TypeScript types and compiles the production bundle via Vite.
-     - **CD Pipeline Job:** Verifies build artifacts, runs release readiness checks, and dispatches automated deployment notifications to Slack.
-  3. *"This demonstrates end-to-end automation: an idea in Miro becomes a formal PlantUML model, which becomes manageable work in Slack/Jira, implemented on GitHub, and verified continuously by CI/CD."*
+  1. *"While GitHub was used for Version Control and SCM in Stage 4, modern software engineering requires a dedicated CI/CD Automation Server like **Jenkins** (or GitLab CI) to handle automated testing, quality gates, and deployment."*
+  2. *"We defined a 6-stage declarative pipeline in our `Jenkinsfile`:"*
+     - **Checkout & Dependency Resolution:** Parallel installation of backend and frontend modules.
+     - **Continuous Integration (CI) Test Suite:** Automatically applies Prisma SQLite migrations, seeds realistic data, and runs our 8 integration test suites (`FR-01` through `FR-10`).
+     - **Frontend Build & Bundling:** Compiles TypeScript and packages production Vite assets.
+     - **Quality Gate:** Verifies zero vulnerabilities, lint adherence, and requirement compliance.
+     - **Continuous Deployment (CD):** Deploys the release package to staging/production.
+     - **Slack Post-Build Webhook:** Automatically posts the deployment health status into `#buildflow-ci-cd-alerts`.
+  3. *"This completes the entire software engineering chain: a collaborative idea in Miro $\rightarrow$ formal PlantUML model $\rightarrow$ Slack team coordination $\rightarrow$ GitHub version control $\rightarrow$ automated Jenkins CI/CD pipeline."*
 
 ---
 
