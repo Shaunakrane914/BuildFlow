@@ -1,0 +1,276 @@
+// Prisma schema for BUILDFlow - Construction Project Management & Collaboration Platform
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  name        String
+  role        String   // PROJECT_OWNER, PROJECT_MANAGER, ARCHITECT, ENGINEER, CONTRACTOR, SITE_SUPERVISOR, SUPPLIER, INSPECTOR
+  title       String
+  department  String
+  phone       String?
+  avatar      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  managedProjects     Project[]        @relation("ProjectManager")
+  ownedProjects       Project[]        @relation("ProjectOwner")
+  assignedTasks       Task[]           @relation("TaskAssignee")
+  uploadedDesigns     DesignDocument[] @relation("DesignUploader")
+  reviewedDesigns     DesignDocument[] @relation("DesignReviewer")
+  designReviews       DesignReview[]
+  designComments      DesignComment[]
+  materialRequests    MaterialRequest[] @relation("SupplierRequests")
+  recordedInspections Inspection[]
+  reportedIssues      Issue[]          @relation("IssueReporter")
+  assignedIssues      Issue[]          @relation("IssueAssignee")
+  notifications       Notification[]
+  activityLogs        ActivityLog[]
+}
+
+model Project {
+  id          String        @id @default(uuid())
+  code        String        @unique
+  name        String
+  description String
+  location    String
+  clientName  String
+  budget      Float
+  startDate   DateTime
+  endDate     DateTime
+  status      String        @default("PLANNING") // PLANNING, IN_PROGRESS, ON_HOLD, COMPLETED
+  progress    Int           @default(0) // 0 - 100 %
+  
+  managerId   String
+  manager     User          @relation("ProjectManager", fields: [managerId], references: [id])
+  
+  ownerId     String
+  owner       User          @relation("ProjectOwner", fields: [ownerId], references: [id])
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relationships
+  tasks            Task[]
+  designs          DesignDocument[]
+  materials        Material[]
+  materialRequests MaterialRequest[]
+  inspections      Inspection[]
+  issues           Issue[]
+  activityLogs     ActivityLog[]
+}
+
+model Task {
+  id          String     @id @default(uuid())
+  code        String     @unique
+  title       String
+  description String
+  projectId   String
+  project     Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  assigneeId  String?
+  assignee    User?      @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  
+  priority    String     @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  status      String     @default("TODO")   // BACKLOG, TODO, IN_PROGRESS, IN_REVIEW, DONE
+  progress    Int        @default(0)        // 0 - 100 %
+  startDate   DateTime
+  dueDate     DateTime
+  completedAt DateTime?
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // Dependencies
+  prerequisites TaskDependency[] @relation("DependentTask")
+  dependents    TaskDependency[] @relation("PrerequisiteTask")
+}
+
+model TaskDependency {
+  id             String @id @default(uuid())
+  taskId         String
+  task           Task   @relation("DependentTask", fields: [taskId], references: [id], onDelete: Cascade)
+  prerequisiteId String
+  prerequisite   Task   @relation("PrerequisiteTask", fields: [prerequisiteId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, prerequisiteId])
+}
+
+model DesignDocument {
+  id          String       @id @default(uuid())
+  code        String       @unique
+  title       String
+  description String
+  category    String       // Structural, Architectural, MEP, Civil, Foundation
+  version     String       @default("1.0")
+  fileUrl     String?
+  fileSize    String?
+  status      String       @default("DRAFT") // DRAFT, UNDER_REVIEW, APPROVED, REJECTED
+  
+  projectId   String
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  uploadedById String
+  uploadedBy  User         @relation("DesignUploader", fields: [uploadedById], references: [id])
+  
+  reviewerId  String?
+  reviewer    User?        @relation("DesignReviewer", fields: [reviewerId], references: [id])
+  
+  approvedAt  DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  reviews     DesignReview[]
+  comments    DesignComment[]
+}
+
+model DesignReview {
+  id         String         @id @default(uuid())
+  designId   String
+  design     DesignDocument @relation(fields: [designId], references: [id], onDelete: Cascade)
+  
+  reviewerId String
+  reviewer   User           @relation(fields: [reviewerId], references: [id])
+  
+  status     String         // APPROVED, REJECTED, CHANGES_REQUESTED
+  remarks    String
+  reviewedAt DateTime       @default(now())
+}
+
+model DesignComment {
+  id         String         @id @default(uuid())
+  designId   String
+  design     DesignDocument @relation(fields: [designId], references: [id], onDelete: Cascade)
+  
+  userId     String
+  user       User           @relation(fields: [userId], references: [id])
+  
+  message    String
+  createdAt  DateTime       @default(now())
+}
+
+model Material {
+  id              String   @id @default(uuid())
+  code            String   @unique
+  name            String
+  category        String   // Concrete, Steel, Timber, Electrical, Plumbing, Finishing
+  unit            String   // Metric Tons, Bags, Cubic Meters, Units
+  totalQuantity   Float
+  unitCost        Float
+  supplierName    String
+  supplierContact String?
+  
+  projectId       String
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  requests        MaterialRequest[]
+}
+
+model MaterialRequest {
+  id               String         @id @default(uuid())
+  code             String         @unique
+  materialId       String
+  material         Material       @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  
+  projectId        String
+  project          Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  quantity         Float
+  supplierId       String?
+  supplier         User?          @relation("SupplierRequests", fields: [supplierId], references: [id])
+  
+  requestedDate    DateTime       @default(now())
+  expectedDelivery DateTime
+  actualDelivery   DateTime?
+  status           String         @default("REQUESTED") // REQUESTED, ORDERED, IN_TRANSIT, DELIVERED, DELAYED
+  notes            String?
+
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+}
+
+model Inspection {
+  id             String           @id @default(uuid())
+  code           String           @unique
+  projectId      String
+  project        Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  inspectorId    String
+  inspector      User             @relation(fields: [inspectorId], references: [id])
+  
+  inspectionDate DateTime
+  area           String           // e.g. Level 4 Slab, Foundation West
+  checkCategory  String           // Structural, Safety, MEP, Environmental
+  result         String           @default("PENDING") // PASSED, FAILED, PENDING
+  notes          String
+  checklistItems String?          // JSON formatted checklist results
+
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+}
+
+model Issue {
+  id              String        @id @default(uuid())
+  code            String        @unique
+  projectId       String
+  project         Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  title           String
+  description     String
+  severity        String        @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
+  status          String        @default("OPEN")   // OPEN, IN_PROGRESS, RESOLVED
+  
+  reportedById    String
+  reportedBy      User          @relation("IssueReporter", fields: [reportedById], references: [id])
+  
+  assignedToId    String?
+  assignedTo      User?         @relation("IssueAssignee", fields: [assignedToId], references: [id])
+  
+  resolvedAt      DateTime?
+  resolutionNotes String?
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type      String   // TASK, DESIGN, MATERIAL, INSPECTION, ISSUE, SYSTEM
+  title     String
+  message   String
+  linkUrl   String?
+  read      Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+}
+
+model ActivityLog {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  projectId  String?
+  project    Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  action     String   // e.g. "APPROVED_DESIGN", "MOVED_TASK", "UPDATED_MATERIAL", "LOGGED_ISSUE"
+  entityType String   // TASK, DESIGN, MATERIAL, INSPECTION, ISSUE, PROJECT, AUTH
+  entityId   String?
+  details    String
+  
+  createdAt  DateTime @default(now())
+}
