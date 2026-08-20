@@ -145,7 +145,7 @@ export async function reviewDesign(req: Request, res: Response) {
       data: {
         designId: id,
         reviewerId,
-        status: status as DesignStatus,
+        status,
         remarks,
         reviewedAt: new Date(),
       },
@@ -155,8 +155,8 @@ export async function reviewDesign(req: Request, res: Response) {
     const updatedDesign = await prisma.designDocument.update({
       where: { id },
       data: {
-        status: status as DesignStatus,
-        approvedAt: status === DesignStatus.APPROVED ? new Date() : null,
+        status,
+        approvedAt: status === 'APPROVED' ? new Date() : null,
       },
       include: {
         uploadedBy: true,

@@ -9,8 +9,8 @@ export async function getIssues(req: Request, res: Response) {
 
     const where: any = {};
     if (projectId) where.projectId = projectId as string;
-    if (severity) where.severity = severity as IssueSeverity;
-    if (status) where.status = status as IssueStatus;
+    if (severity) where.severity = severity as string;
+    if (status) where.status = status as string;
     if (assignedToId) where.assignedToId = assignedToId as string;
 
     const issues = await prisma.issue.findMany({
@@ -47,8 +47,8 @@ export async function createIssue(req: Request, res: Response) {
         projectId,
         title,
         description,
-        severity: (severity as IssueSeverity) || IssueSeverity.MEDIUM,
-        status: IssueStatus.OPEN,
+        severity: severity || 'MEDIUM',
+        status: 'OPEN',
         reportedById: userId,
         assignedToId: assignedToId || null,
       },
@@ -95,19 +95,19 @@ export async function updateIssue(req: Request, res: Response) {
       return res.status(404).json({ success: false, error: 'Issue not found' });
     }
 
-    const isResolving = status === IssueStatus.RESOLVED && existing.status !== IssueStatus.RESOLVED;
+    const isResolving = status === 'RESOLVED' && existing.status !== 'RESOLVED';
 
     const updated = await prisma.issue.update({
       where: { id },
       data: {
         ...(title && { title }),
         ...(description && { description }),
-        ...(severity && { severity: severity as IssueSeverity }),
-        ...(status && { status: status as IssueStatus }),
+        ...(severity && { severity }),
+        ...(status && { status }),
         ...(assignedToId !== undefined && { assignedToId: assignedToId || null }),
         ...(resolutionNotes !== undefined && { resolutionNotes }),
         ...(isResolving && { resolvedAt: new Date() }),
-        ...(status && status !== IssueStatus.RESOLVED && { resolvedAt: null }),
+        ...(status && status !== 'RESOLVED' && { resolvedAt: null }),
       },
       include: { project: true, reportedBy: true, assignedTo: true },
     });

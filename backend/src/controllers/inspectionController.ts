@@ -9,7 +9,7 @@ export async function getInspections(req: Request, res: Response) {
 
     const where: any = {};
     if (projectId) where.projectId = projectId as string;
-    if (result) where.result = result as InspectionResult;
+    if (result) where.result = result as string;
     if (checkCategory) where.checkCategory = checkCategory as string;
 
     const inspections = await prisma.inspection.findMany({
@@ -47,14 +47,14 @@ export async function createInspection(req: Request, res: Response) {
         inspectionDate: new Date(inspectionDate || Date.now()),
         area,
         checkCategory,
-        result: (result as InspectionResult) || InspectionResult.PENDING,
+        result: result || 'PENDING',
         notes: notes || '',
         checklistItems: typeof checklistItems === 'string' ? checklistItems : JSON.stringify(checklistItems || []),
       },
       include: { project: true, inspector: true },
     });
 
-    if (inspection.result === InspectionResult.FAILED) {
+    if (inspection.result === 'FAILED') {
       await createNotification({
         userId: inspection.project.managerId,
         type: 'INSPECTION',
