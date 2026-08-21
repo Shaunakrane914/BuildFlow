@@ -1,16 +1,18 @@
 @startuml BuildFlow_Sequence_Diagram
 title BuildFlow - Sequence Diagram (Design Review & Approval Workflow)
 autonumber
-actor "Architect\n(Sophia)" as Arch
-boundary "Frontend UI\n(React)" as UI
-control "Backend API\n(Express)" as API
-database "Relational DB\n(SQLite/Prisma)" as DB
-actor "Structural Engineer\n(Marcus PE)" as Eng
-actor "General Contractor\n(David)" as Cont
+skinparam shadowing false
+
+actor "Architect\n(Sophia)" as Arch <<primary_actor>>
+boundary "Frontend UI\n(React)" as UI <<boundary>>
+control "Backend API\n(Express)" as API <<control>>
+database "Relational DB\n(SQLite/Prisma)" as DB <<entity>>
+actor "Structural Engineer\n(Marcus PE)" as Eng <<primary_actor>>
+actor "General Contractor\n(David)" as Cont <<primary_actor>>
 
 == 1. Blueprint Upload & Submission ==
 Arch -> UI: Uploads CAD drawing revision (v2.1 MEP)
-UI -> API: POST /api/designs (code, version, uploaderId)
+UI -> API: POST /api/designs (code, version, uploaderId) {timeout = 5s}
 API -> DB: INSERT INTO DesignDocument (status: UNDER_REVIEW)
 API -> DB: INSERT INTO Notification (to: Marcus Brody)
 API -> DB: INSERT INTO ActivityLog (action: UPLOADED_DESIGN)
@@ -21,17 +23,26 @@ UI --> Arch: Display "Under Review" status badge
 Eng -> UI: Opens "Design Documents" & selects Drawing
 UI -> API: GET /api/designs (filters by project)
 API --> UI: Return Design details with version history
-Eng -> UI: Clicks "Conduct Review", enters PE calculation remarks & clicks "Approve"
-UI -> API: POST /api/designs/:id/review (decision: APPROVED, remarks)
-API -> DB: UPDATE DesignDocument SET status = 'APPROVED'
-API -> DB: INSERT INTO DesignReview (reviewerId, status, remarks)
-API -> DB: INSERT INTO Notification (to: Sophia & David)
-API -> DB: INSERT INTO ActivityLog (action: APPROVED_DESIGN)
-API --> UI: 200 OK (Updated status: APPROVED)
-UI --> Eng: Display Green Certified Badge
+
+alt PE Load Calculation Verification [Passed]
+  Eng -> UI: Clicks "Conduct Review", enters remarks & clicks "Approve"
+  UI -> API: POST /api/designs/:id/review (decision: APPROVED, remarks)
+  API -> DB: UPDATE DesignDocument SET status = 'APPROVED'
+  API -> DB: INSERT INTO DesignReview (reviewerId, status, remarks)
+  API -> DB: INSERT INTO Notification (to: Sophia & David)
+  API -> DB: INSERT INTO ActivityLog (action: APPROVED_DESIGN)
+  API --> UI: 200 OK (Updated status: APPROVED)
+  UI --> Eng: Display Green Certified Badge
+else Calculation Check [Failed]
+  Eng -> UI: Clicks "Reject", enters Rework Orders
+  UI -> API: POST /api/designs/:id/review (decision: REJECTED, remarks)
+  API -> DB: UPDATE DesignDocument SET status = 'REJECTED'
+  API --> UI: 200 OK (Status: REJECTED)
+  UI --> Arch: Notify Architect to upload revision v2.2
+end
 
 == 3. Contractor Notification & Execution ==
-API -> UI: Dispatches Realtime / Polled Notification
+API -> UI: Dispatches Notification
 UI --> Cont: "Drawing approved - Proceed with L14-16 rough-in"
 Cont -> UI: Moves Task TSK-104 from TODO to IN_PROGRESS
 UI -> API: PATCH /api/tasks/TSK-104 (status: IN_PROGRESS)

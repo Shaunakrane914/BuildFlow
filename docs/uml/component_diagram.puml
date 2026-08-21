@@ -3,7 +3,7 @@ title BuildFlow - Software Component Diagram (Architectural Modules & Subsystems
 skinparam componentStyle uml2
 skinparam shadowing false
 
-package "Frontend Client Application (SPA)" {
+package "Frontend Client Application (SPA)" <<subsystem>> {
   [React UI Layer] as UI
   [Auth & Role Context] as Auth
   [Project & KPI Context] as ProjCtx
@@ -13,7 +13,11 @@ package "Frontend Client Application (SPA)" {
   [Axios REST Client] as Axios
 }
 
-package "Backend REST API Server" {
+interface "IRestApi" as IRestApi
+interface "IDatabase" as IDatabase
+interface "IAuditLogger" as IAuditLogger
+
+package "Backend REST API Server" <<subsystem>> {
   [Express Router /api] as Router
   [AuthController] as AuthCtrl
   [ProjectController] as ProjCtrl
@@ -22,25 +26,30 @@ package "Backend REST API Server" {
   [MaterialController] as MatCtrl
   [InspectionController] as InspCtrl
   [DashboardController] as DashCtrl
-  [ActivityAuditService] as AuditSvc
-  [Prisma ORM Client] as Prisma
+  [ActivityAuditService] as AuditSvc <<service>>
+  [Prisma ORM Client] as Prisma <<service>>
 }
 
-database "Data Storage" {
+database "Data Storage" <<database>> {
   [SQLite Relational DB (dev.db)] as DB
 }
 
-package "External DevOps / Integrations" {
+package "External DevOps & Collaboration Services" <<subsystem>> {
   [Slack Webhook Service] as Slack
   [GitHub Actions CI/CD] as CI
 }
+
+Router - IRestApi
+Prisma - IDatabase
+AuditSvc - IAuditLogger
+
+Axios ..> IRestApi : <<use>>
 
 UI ..> Axios
 Kanban ..> Axios
 DesignUI ..> Axios
 MatUI ..> Axios
 
-Axios --> Router : HTTP REST / JSON (x-user-id)
 Router --> AuthCtrl
 Router --> ProjCtrl
 Router --> TaskCtrl
@@ -49,21 +58,21 @@ Router --> MatCtrl
 Router --> InspCtrl
 Router --> DashCtrl
 
-TaskCtrl ..> AuditSvc
-DesignCtrl ..> AuditSvc
-MatCtrl ..> AuditSvc
+TaskCtrl ..> IAuditLogger
+DesignCtrl ..> IAuditLogger
+MatCtrl ..> IAuditLogger
 
-AuthCtrl --> Prisma
-ProjCtrl --> Prisma
-TaskCtrl --> Prisma
-DesignCtrl --> Prisma
-MatCtrl --> Prisma
-InspCtrl --> Prisma
-DashCtrl --> Prisma
+AuthCtrl ..> Prisma
+ProjCtrl ..> Prisma
+TaskCtrl ..> Prisma
+DesignCtrl ..> Prisma
+MatCtrl ..> Prisma
+InspCtrl ..> Prisma
+DashCtrl ..> Prisma
 
-Prisma --> DB : SQL Engine Queries
+Prisma ..> IDatabase
 
-AuditSvc ..> Slack : Event Webhook Alerts
-CI ..> Prisma : Automated DB Migrations & Vitest Tests
+AuditSvc ..> Slack
+CI ..> Prisma
 
 @enduml

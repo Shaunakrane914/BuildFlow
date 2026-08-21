@@ -3,9 +3,20 @@ title BuildFlow - System Class Diagram (Object-Oriented Domain Model)
 skinparam classAttributeIconSize 0
 skinparam monochrome false
 skinparam shadowing false
-skinparam defaultFontName Arial
 
-enum UserRole {
+abstract class BaseEntity <<entity>> {
+  +String id
+  +DateTime createdAt
+  +DateTime updatedAt
+}
+
+note top of BaseEntity
+  Architecture Note: Domain Model Entity Hierarchy
+  All entities inherit from BaseEntity via Generalization.
+  Contains Stereotypes <<entity>>, <<service>>, <<enumeration>>.
+end note
+
+enum UserRole <<enumeration>> {
   PROJECT_OWNER
   PROJECT_MANAGER
   ARCHITECT
@@ -16,7 +27,7 @@ enum UserRole {
   INSPECTOR
 }
 
-enum TaskStatus {
+enum TaskStatus <<enumeration>> {
   BACKLOG
   TODO
   IN_PROGRESS
@@ -24,21 +35,21 @@ enum TaskStatus {
   DONE
 }
 
-enum Priority {
+enum Priority <<enumeration>> {
   LOW
   MEDIUM
   HIGH
   URGENT
 }
 
-enum DesignStatus {
+enum DesignStatus <<enumeration>> {
   DRAFT
   UNDER_REVIEW
   APPROVED
   REJECTED
 }
 
-enum MaterialStatus {
+enum MaterialStatus <<enumeration>> {
   REQUESTED
   ORDERED
   IN_TRANSIT
@@ -46,32 +57,30 @@ enum MaterialStatus {
   DELAYED
 }
 
-enum InspectionResult {
+enum InspectionResult <<enumeration>> {
   PASSED
   FAILED
   PENDING
 }
 
-enum IssueSeverity {
+enum IssueSeverity <<enumeration>> {
   LOW
   MEDIUM
   HIGH
   CRITICAL
 }
 
-class User {
-  +String id
+class User <<entity>> {
   +String name
   +String email
   +UserRole role
   +String title
   +String department
-  +login()
-  +switchRole()
+  +login() : Boolean
+  +switchRole(UserRole newRole) : Void
 }
 
-class Project {
-  +String id
+class Project <<entity>> {
   +String code
   +String name
   +String location
@@ -79,50 +88,45 @@ class Project {
   +DateTime startDate
   +DateTime endDate
   +Int progress
-  +createProject()
-  +calculateProgress()
+  +createProject() : Project
+  +calculateProgress() : Int
 }
 
-class Task {
-  +String id
+class Task <<entity>> {
   +String code
   +String title
   +String description
   +Priority priority
   +TaskStatus status
   +DateTime dueDate
-  +updateStatus()
-  +assignTo()
+  +updateStatus(TaskStatus status) : Void
+  +assignTo(User assignee) : Void
 }
 
-class TaskDependency {
-  +String id
+class TaskDependency <<entity>> {
   +String taskId
   +String prerequisiteTaskId
 }
 
-class DesignDocument {
-  +String id
+class DesignDocument <<entity>> {
   +String code
   +String title
   +String category
   +String version
   +DesignStatus status
-  +uploadBlueprint()
-  +submitForReview()
+  +uploadBlueprint() : Void
+  +submitForReview() : Void
 }
 
-class DesignReview {
-  +String id
+class DesignReview <<entity>> {
   +String designId
   +String reviewerId
-  +String status
+  +DesignStatus status
   +String calculationRemarks
-  +certifyApproval()
+  +certifyApproval(String remarks) : Void
 }
 
-class Material {
-  +String id
+class Material <<entity>> {
   +String code
   +String name
   +String category
@@ -130,67 +134,82 @@ class Material {
   +Float unitCost
 }
 
-class MaterialRequest {
-  +String id
+class MaterialRequest <<entity>> {
   +String code
   +Float quantity
   +MaterialStatus status
   +DateTime expectedDelivery
   +String notes
-  +updateDeliveryStatus()
+  +updateDeliveryStatus(MaterialStatus newStatus) : Void
 }
 
-class Inspection {
-  +String id
+class Inspection <<entity>> {
   +String code
   +String area
   +String checkCategory
   +InspectionResult result
   +String notes
   +DateTime inspectionDate
-  +recordAudit()
+  +recordAudit() : Inspection
 }
 
-class Issue {
-  +String id
+class Issue <<entity>> {
   +String code
   +String title
   +IssueSeverity severity
   +String status
   +String resolutionNotes
-  +logIssue()
-  +resolveIssue()
+  +logIssue() : Issue
+  +resolveIssue(String notes) : Void
 }
 
-class ActivityLog {
-  +String id
+class ActivityLog <<entity>> {
   +String userId
   +String action
   +String entityType
   +String details
-  +DateTime createdAt
 }
 
-' Relationships
-User "1" <-- "0..*" Project : managedBy / ownedBy
+interface IAuditService <<interface>> {
+  +logActivity(String userId, String action, String details) : Void
+}
+
+class AuditLogger <<service>> {
+  +logActivity(String userId, String action, String details) : Void
+}
+
+BaseEntity <|-- User
+BaseEntity <|-- Project
+BaseEntity <|-- Task
+BaseEntity <|-- DesignDocument
+BaseEntity <|-- Material
+BaseEntity <|-- Inspection
+BaseEntity <|-- Issue
+BaseEntity <|-- ActivityLog
+
+IAuditService <|.. AuditLogger
+
 Project "1" *-- "0..*" Task : contains
 Project "1" *-- "0..*" DesignDocument : contains
 Project "1" *-- "0..*" Material : specifies
 Project "1" *-- "0..*" Inspection : audits
 Project "1" *-- "0..*" Issue : tracks
+DesignDocument "1" *-- "0..*" DesignReview : reviews
 
 Task "1" o-- "0..*" TaskDependency : prerequisite
-User "1" <-- "0..*" Task : assignedTo
+Material "1" o-- "0..*" MaterialRequest : orderedVia
 
-DesignDocument "1" *-- "0..*" DesignReview : reviews
+User "1" <-- "0..*" Project : managedBy
+User "1" <-- "0..*" Task : assignedTo
 User "1" <-- "0..*" DesignReview : reviewedBy
 User "1" <-- "0..*" DesignDocument : uploadedBy
-
-Material "1" *-- "0..*" MaterialRequest : orderedVia
 User "1" <-- "0..*" MaterialRequest : suppliedBy
-
 User "1" <-- "0..*" Inspection : inspectedBy
-User "1" <-- "0..*" Issue : reportedBy / assignedTo
+User "1" <-- "0..*" Issue : reportedBy
 User "1" <-- "0..*" ActivityLog : performedBy
+
+Task ..> AuditLogger : <<use>>
+DesignReview ..> AuditLogger : <<use>>
+Issue ..> AuditLogger : <<use>>
 
 @enduml

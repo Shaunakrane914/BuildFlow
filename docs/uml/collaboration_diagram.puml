@@ -3,12 +3,12 @@ title BuildFlow - Collaboration / Communication Diagram (Object Message Interact
 skinparam monochrome false
 skinparam shadowing false
 
-rectangle "Architect (Sophia)" as Arch
-rectangle "Frontend App (React)" as UI
-rectangle "Backend Controller" as Backend
-rectangle "Database (Prisma/SQLite)" as DB
-rectangle "Engineer (Marcus PE)" as Eng
-rectangle "Contractor (David)" as Cont
+rectangle "Architect (Sophia)" as Arch <<primary_actor>>
+rectangle "Frontend App (React)" as UI <<boundary>>
+rectangle "Backend Controller" as Backend <<control>>
+rectangle "Database (Prisma/SQLite)" as DB <<entity>>
+rectangle "Engineer (Marcus PE)" as Eng <<primary_actor>>
+rectangle "Contractor (David)" as Cont <<primary_actor>>
 
 Arch -right-> UI : 1: uploadDesign(CAD_v2.1)
 UI -right-> Backend : 2: POST /api/designs

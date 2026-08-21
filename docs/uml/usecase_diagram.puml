@@ -4,14 +4,14 @@ left to right direction
 skinparam packageStyle rectangle
 skinparam shadowing false
 
-actor "Project Owner" as Owner
-actor "Project Manager" as PM
-actor "Architect" as Arch
-actor "Structural Engineer (PE)" as Eng
-actor "General Contractor" as Cont
-actor "Site Supervisor" as Site
-actor "Material Supplier" as Supp
-actor "Safety Inspector" as Insp
+actor "Project Owner" as Owner <<primary_actor>>
+actor "Project Manager" as PM <<primary_actor>>
+actor "Architect" as Arch <<primary_actor>>
+actor "Structural Engineer (PE)" as Eng <<primary_actor>>
+actor "General Contractor" as Cont <<primary_actor>>
+actor "Site Supervisor" as Site <<primary_actor>>
+actor "Material Supplier" as Supp <<primary_actor>>
+actor "Safety Inspector" as Insp <<primary_actor>>
 
 rectangle "BUILDFlow Construction Collaboration Platform" {
   usecase "UC-01: Create & View Projects" as UC1
@@ -26,6 +26,18 @@ rectangle "BUILDFlow Construction Collaboration Platform" {
   usecase "UC-10: View Executive KPIs & Export Reports" as UC10
   usecase "UC-11: Inspect Immutable Audit Log" as UC11
 }
+
+note right of UC5
+  Engineering Note:
+  Requires Structural PE Certification
+  and NFPA-90A Code Compliance Check.
+end note
+
+note right of UC7
+  Logistics Note:
+  Triggers immediate alert banner if
+  shipment status is flagged DELAYED.
+end note
 
 Owner --> UC1
 Owner --> UC10
@@ -56,5 +68,12 @@ Supp --> UC7
 
 Insp --> UC8
 Insp --> UC9
+
+UC2 ..> UC11 : <<include>>
+UC5 ..> UC11 : <<include>>
+UC8 ..> UC11 : <<include>>
+
+UC9 .> UC6 : <<extend>>
+UC9 .> UC8 : <<extend>>
 
 @enduml

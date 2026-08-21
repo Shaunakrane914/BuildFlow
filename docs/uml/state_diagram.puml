@@ -6,23 +6,42 @@ skinparam state {
   ArrowColor Black
 }
 
-state "Task Lifecycle" as TaskLifecycle {
+note top of TaskLifecycle
+  <b>State Machine Note:</b>
+  Models event-driven state transitions with
+  entry/exit actions, guard conditions [if condition],
+  and state activities per UML standard.
+end note
+
+state "Task Lifecycle State Machine" as TaskLifecycle {
   [*] --> BACKLOG : Work package drafted
-  BACKLOG --> TODO : Scheduled in Milestone
-  TODO --> IN_PROGRESS : Contractor begins work
-  IN_PROGRESS --> IN_REVIEW : Crew finishes, awaiting audit
-  IN_REVIEW --> DONE : Verified & passed QA
-  IN_REVIEW --> IN_PROGRESS : Non-conformance rework
+  
+  BACKLOG --> TODO : Sprint/Milestone Scheduled\n[if budget_approved == true]\nentry / setAssignee()\nexit / notifyContractor()
+  
+  TODO --> IN_PROGRESS : Contractor Begins Work\nentry / startTimer()\ndo / trackWorkload()
+  
+  IN_PROGRESS --> IN_REVIEW : Work Package Completed\n[if deliverables_submitted == true]\nentry / triggerAudit()
+  
+  IN_REVIEW --> DONE : Inspection Verified\n[if inspection_verdict == PASSED]\nentry / updateProjectProgress()\nexit / logAuditTrail()
+  
+  IN_REVIEW --> IN_PROGRESS : Rework Ordered\n[if inspection_verdict == FAILED]\nentry / logDefectTicket()
+  
   DONE --> [*]
 }
 
-state "Material Supply Chain Lifecycle" as MaterialLifecycle {
-  [*] --> REQUESTED : Batch order submitted
-  REQUESTED --> ORDERED : Purchase order approved
-  ORDERED --> IN_TRANSIT : Dispatched from warehouse
-  IN_TRANSIT --> DELIVERED : Offloaded at site
-  IN_TRANSIT --> DELAYED : Customs / Port hold
-  DELAYED --> IN_TRANSIT : Cleared & resumed transit
+state "Material Logistics State Machine" as MaterialLifecycle {
+  [*] --> REQUESTED : Order Request Submitted
+  
+  REQUESTED --> ORDERED : Purchase Order Approved\n[if supplier_assigned == true]
+  
+  ORDERED --> IN_TRANSIT : Dispatched from Warehouse\nentry / generateTrackingCode()
+  
+  IN_TRANSIT --> DELIVERED : Arrived at Site Drop-Off\n[if port_customs == CLEARED]\nentry / signOffReceipt()
+  
+  IN_TRANSIT --> DELAYED : Customs / Port Disruption\n[if port_customs == HELD]\nentry / flagDelayedAlert()\nexit / notifyPM()
+  
+  DELAYED --> IN_TRANSIT : Customs Cleared\nentry / resumeTransit()
+  
   DELIVERED --> [*]
 }
 

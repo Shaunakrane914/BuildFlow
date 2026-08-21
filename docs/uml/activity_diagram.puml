@@ -1,48 +1,71 @@
 @startuml BuildFlow_Activity_Diagram
-title BuildFlow - System Activity Diagram (End-to-End Construction Workflow)
-start
+title BuildFlow - System Activity Diagram (End-to-End Construction Workflow with Swimlanes)
 
-:Project Owner initiates Project Scope & Budget;
-:Project Manager creates Milestone Tasks in Backlog;
+|#AliceBlue|Project Owner|
+start
+:Initiates Project Scope & Budget;
+
+|#LightYellow|Project Manager|
+:Creates Milestone Tasks in Backlog;
+:Establishes Gantt Timeline & Prerequisites;
 
 fork
-  :Architect uploads BIM/CAD Blueprints (v1.0);
-  :Structural Engineer performs Load Calculations;
+  |#MistyRose|Architect|
+  :Uploads BIM/CAD Blueprints (v1.0);
+
+  |#Lavender|Structural Engineer|
+  :Performs Structural Load Calculations;
   if (Calculation Check) then (Passed)
-    :Engineer approves Drawing & Certifies;
+    :Approves Drawing & Certifies Sign-Off;
   else (Failed)
-    :Engineer Rejects with Revision Orders;
-    :Architect uploads revised Drawing (v2.1);
-    :Engineer approves Drawing;
+    :Rejects Drawing with Revision Orders;
+    |Architect|
+    :Uploads Revised Drawing (v2.1);
+    |Structural Engineer|
+    :Approves Revised Drawing (v2.1);
   endif
+
 fork again
-  :Contractor requests Material Batch (Steel/Concrete);
-  :Supplier ships Material Order;
+  |#Honeydew|General Contractor|
+  :Requests Bulk Material Batch (Steel/Concrete);
+
+  |#PeachPuff|Material Supplier|
+  :Dispatches Shipment from Warehouse;
   if (Logistics Transit) then (On Time)
-    :Delivered to Construction Site;
+    :Delivered to Site Drop-off Zone;
   else (Delayed)
-    :Flag DELAYED Status & Log Site Issue;
-    :Project Manager reschedules Crane/Pour Timeline;
-    :Customs Cleared & Delivered;
+    :Flags DELAYED Status at Customs;
+    |Project Manager|
+    :Logs Supply Disruption & Reschedules Crane;
+    |Material Supplier|
+    :Clears Customs & Delivers Rebar Batch;
   endif
 end fork
 
-:General Contractor commences Onsite Work Package;
-:Contractor moves Task to IN_PROGRESS on Kanban;
-:Municipal Inspector conducts Onsite Safety Audit;
+|General Contractor|
+:Commences Onsite Work Package;
+:Moves Task to IN_PROGRESS on Kanban;
+
+|#Plum|Safety Inspector|
+:Conducts Onsite Safety & Structural Audit;
 
 if (Inspection Verdict) then (PASSED)
+  |General Contractor|
   :Task transitioned to DONE;
-  :System updates Project Progress %;
+  |Project Manager|
+  :System recalculates Project Progress %;
 else (FAILED)
-  :Log Non-Compliance Violation;
-  :Remediate Defect;
-  :Re-inspect & Pass;
+  |Safety Inspector|
+  :Logs Non-Compliance Violation Ticket;
+  |General Contractor|
+  :Remediates Fire Barrier Penetration Sleeves;
+  |Safety Inspector|
+  :Re-inspects & Pass Audit;
+  |General Contractor|
   :Task transitioned to DONE;
 endif
 
-:Executive Reports & KPIs updated;
-:Immutable Audit Log generated;
-
+|Project Owner|
+:Views Executive KPIs & Exports Health Report;
 stop
 @enduml
