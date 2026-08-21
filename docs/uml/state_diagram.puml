@@ -1,4 +1,5 @@
 @startuml BuildFlow_State_Diagram
+title BuildFlow - State Transition Diagram (Task & Material Lifecycles)
 skinparam state {
   BackgroundColor White
   BorderColor DarkSlateGray

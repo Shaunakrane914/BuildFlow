@@ -1,4 +1,5 @@
 @startuml BuildFlow_Collaboration_Diagram
+title BuildFlow - Collaboration / Communication Diagram (Object Message Interactions)
 skinparam monochrome false
 skinparam shadowing false
 

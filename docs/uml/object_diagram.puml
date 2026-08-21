@@ -1,4 +1,5 @@
 @startuml BuildFlow_Object_Diagram
+title BuildFlow - Object Diagram (Runtime Instances & Static Snapshots)
 skinparam objectAttributeIconSize 0
 skinparam monochrome false
 skinparam shadowing false

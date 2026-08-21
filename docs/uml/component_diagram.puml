@@ -1,4 +1,5 @@
 @startuml BuildFlow_Component_Diagram
+title BuildFlow - Software Component Diagram (Architectural Modules & Subsystems)
 skinparam componentStyle uml2
 skinparam shadowing false
 

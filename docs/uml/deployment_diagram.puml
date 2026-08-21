@@ -1,4 +1,5 @@
 @startuml BuildFlow_Deployment_Diagram
+title BuildFlow - Deployment Diagram (Hardware Nodes & Network Topology)
 skinparam node {
   BackgroundColor White
   BorderColor DarkSlateGray

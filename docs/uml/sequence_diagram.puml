@@ -1,4 +1,5 @@
 @startuml BuildFlow_Sequence_Diagram
+title BuildFlow - Sequence Diagram (Design Review & Approval Workflow)
 autonumber
 actor "Architect\n(Sophia)" as Arch
 boundary "Frontend UI\n(React)" as UI
