@@ -1,0 +1,68 @@
+name: Slack CI/CD & Commit Notifications
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  issues:
+    types: [ opened, closed, reopened ]
+
+jobs:
+  notify-slack:
+    name: Dispatch Slack Notification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Send Slack Push Alert via Webhook
+        if: github.event_name == 'push'
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+        run: |
+          if [ -n "$SLACK_BOT_TOKEN" ]; then
+            curl -X POST -H 'Content-type: application/json' \
+              -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
+              --data '{
+                "channel": "C0BR9BDBD0F",
+                "text": "🚀 *New GitHub Commit Pushed to BuildFlow*",
+                "blocks": [
+                  {
+                    "type": "header",
+                    "text": {
+                      "type": "plain_text",
+                      "text": "🐙 GitHub Commit Alert: Shaunakrane914/BuildFlow",
+                      "emoji": true
+                    }
+                  },
+                  {
+                    "type": "section",
+                    "fields": [
+                      { "type": "mrkdwn", "text": "*Branch:* `${{ github.ref_name }}`" },
+                      { "type": "mrkdwn", "text": "*Author:* `${{ github.actor }}`" },
+                      { "type": "mrkdwn", "text": "*Commit SHA:* `${{ github.sha }}`" },
+                      { "type": "mrkdwn", "text": "*Event:* `push`" }
+                    ]
+                  },
+                  {
+                    "type": "section",
+                    "text": {
+                      "type": "mrkdwn",
+                      "text": "*Commit Message:* _\"${{ github.event.head_commit.message }}\"_"
+                    }
+                  },
+                  {
+                    "type": "actions",
+                    "elements": [
+                      {
+                        "type": "button",
+                        "text": { "type": "plain_text", "text": "View on GitHub 🐙", "emoji": true },
+                        "url": "${{ github.event.head_commit.url }}",
+                        "style": "primary"
+                      }
+                    ]
+                  }
+                ]
+              }' https://slack.com/api/chat.postMessage
+          fi
